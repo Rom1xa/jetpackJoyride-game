@@ -1,16 +1,17 @@
 #include "Player.h"
 #include <SFML/Graphics.hpp>
 
+using namespace sf;
 int main() {
-  sf::RenderWindow window(sf::VideoMode(800, 600), "Jetpack Joyride Clone");
+  RenderWindow window(VideoMode(800, 600), "Jetpack Joyride Clone");
   Player player;
 
-  sf::Clock clock;
+  Clock clock;
 
   while (window.isOpen()) {
-    sf::Event event;
+    Event event;
     while (window.pollEvent(event)) {
-      if (event.type == sf::Event::Closed)
+      if (event.type == Event::Closed)
         window.close();
     }
 

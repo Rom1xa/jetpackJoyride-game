@@ -2,15 +2,18 @@
 #include <SFML/Window/Keyboard.hpp>
 #include <iostream>
 
-Player::Player() {
-  if (!texture.loadFromFile("static/player.png")) {
+Player::Player()
+    : frameWidth(135), frameHeight(130), currentFrame(0), frameDuration(0.1f),
+      animationTimer(0.0f), totalFrames(4) {
+  if (!texture.loadFromFile("static/BarryFullSpriteSheet.png")) {
     std::cerr << "Error loading player texture" << std::endl;
 
-    sf::RectangleShape placeholder(sf::Vector2f(50.0f, 100.0f));
+    sf::RectangleShape placeholder(sf::Vector2f(frameWidth, frameHeight));
     placeholder.setFillColor(sf::Color::Red);
 
   } else {
     sprite.setTexture(texture);
+    sprite.setTextureRect(sf::IntRect(0, 0, frameWidth, frameHeight));
   }
 
   sprite.setPosition(100, 300); // start pos
@@ -25,27 +28,38 @@ void Player::handleInput() {
 }
 
 void Player::update(float deltaTime, const sf::RenderWindow &window) {
-  // apply gravity
+  //  gravity
   velocity.y += gravity * deltaTime;
 
   // limit fall speed
   if (velocity.y > maxFallSpeed)
     velocity.y = maxFallSpeed;
 
+  // update player pos
+  sprite.move(0, velocity.y * deltaTime);
+
+  // animation
+  animationTimer += deltaTime;
+  if (animationTimer >= frameDuration) {
+    currentFrame = (currentFrame + 1) % totalFrames;
+    sprite.setTextureRect(
+        sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight));
+    animationTimer = 0.0f;
+  }
+
   // window boundaries
   if (sprite.getPosition().y < 0) {
-    sprite.setPosition(sprite.getPosition().x, 0);
-    velocity.y = 0;
-  }
-  if (sprite.getPosition().y + sprite.getGlobalBounds().height >
-      window.getSize().y) {
-    sprite.setPosition(sprite.getPosition().x,
-                       window.getSize().y - sprite.getGlobalBounds().height);
+    sprite.setPosition(sprite.getPosition().x, 0); // top
     velocity.y = 0;
   }
 
-  // update player position
-  sprite.move(0, velocity.y * deltaTime);
+  if (sprite.getPosition().y + sprite.getGlobalBounds().height >
+      window.getSize().y) {
+    sprite.setPosition(sprite.getPosition().x,
+                       window.getSize().y -
+                           sprite.getGlobalBounds().height); // bottom
+    velocity.y = 0;
+  }
 }
 
 void Player::draw(sf::RenderWindow &window) { window.draw(sprite); }
