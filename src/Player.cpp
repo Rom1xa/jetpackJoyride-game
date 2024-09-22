@@ -4,61 +4,78 @@
 
 Player::Player()
     : frameWidth(135), frameHeight(130), currentFrame(0), frameDuration(0.1f),
-      animationTimer(0.0f), totalFrames(4) {
+      animationTimer(0.0f), totalFrames(4), isOnGround(true),
+      ceilingLimit(100) {
   if (!texture.loadFromFile("static/BarryFullSpriteSheet.png")) {
     std::cerr << "Error loading player texture" << std::endl;
-
-    sf::RectangleShape placeholder(sf::Vector2f(frameWidth, frameHeight));
-    placeholder.setFillColor(sf::Color::Red);
-
   } else {
     sprite.setTexture(texture);
-    sprite.setTextureRect(sf::IntRect(0, 0, frameWidth, frameHeight));
+    sprite.setTextureRect(
+        sf::IntRect(0, 0, frameWidth, frameHeight)); // initial frame
   }
 
-  sprite.setPosition(100, 300); // start pos
+  sprite.setPosition(100, 500); // start pos
   velocity = sf::Vector2f(0, 0);
 }
 
 void Player::handleInput() {
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key(sf::Keyboard::U))) {
     // activate jetpack
-    velocity.y = jetpackPower;
+    if (sprite.getPosition().y > ceilingLimit) {
+      velocity.y = jetpackPower;
+      isOnGround = false;
+    }
   }
 }
 
 void Player::update(float deltaTime, const sf::RenderWindow &window) {
-  //  gravity
-  velocity.y += gravity * deltaTime;
+  // apply gravity only when not on ground
+  if (!isOnGround) {
+    //  gravity
+    velocity.y += gravity * deltaTime;
 
-  // limit fall speed
-  if (velocity.y > maxFallSpeed)
-    velocity.y = maxFallSpeed;
+    // limit fall speed
+    if (velocity.y > maxFallSpeed)
+      velocity.y = maxFallSpeed;
+  }
 
   // update player pos
   sprite.move(0, velocity.y * deltaTime);
 
-  // animation
+  // is on the floor
+  if (sprite.getPosition().y + sprite.getGlobalBounds().height >=
+      window.getSize().y - 50) {
+    sprite.setPosition(sprite.getPosition().x,
+                       window.getSize().y - sprite.getGlobalBounds().height -
+                           50);
+    isOnGround = true;
+    velocity.y = 0; // stop falling
+  }
+  // hit the ceiling
+  else if (sprite.getPosition().y <= ceilingLimit) {
+    sprite.setPosition(sprite.getPosition().x,
+                       ceilingLimit); // snap to the ceiling
+    velocity.y = 0;
+  } else {
+    isOnGround = false;
+  }
+
+  updateAnimation(deltaTime);
+}
+
+void Player::updateAnimation(float deltaTime) {
   animationTimer += deltaTime;
   if (animationTimer >= frameDuration) {
-    currentFrame = (currentFrame + 1) % totalFrames;
-    sprite.setTextureRect(
-        sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight));
-    animationTimer = 0.0f;
-  }
-
-  // window boundaries
-  if (sprite.getPosition().y < 0) {
-    sprite.setPosition(sprite.getPosition().x, 0); // top
-    velocity.y = 0;
-  }
-
-  if (sprite.getPosition().y + sprite.getGlobalBounds().height >
-      window.getSize().y) {
-    sprite.setPosition(sprite.getPosition().x,
-                       window.getSize().y -
-                           sprite.getGlobalBounds().height); // bottom
-    velocity.y = 0;
+    if (isOnGround) {
+      currentFrame = (currentFrame + 1) % 4;
+      sprite.setTextureRect(
+          sf::IntRect(currentFrame * frameWidth, 0, frameWidth, frameHeight));
+    } else {
+      currentFrame = (currentFrame + 1) % 4;
+      sprite.setTextureRect(sf::IntRect(currentFrame * frameWidth, frameHeight,
+                                        frameWidth, frameHeight));
+    }
+    animationTimer = 0.0f; // reset timer
   }
 }
 

@@ -1,5 +1,4 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 
 #include <SFML/Graphics.hpp>
 
@@ -19,6 +18,7 @@ private:
   const float gravity = 980.0f;       // Gravity constant (pixels per second^2)
   const float jetpackPower = -500.0f; // Jetpack power (upward force)
   const float maxFallSpeed = 600.0f;  // Maximum falling speed
+  bool isOnGround;
 
   // animation properties
   int frameWidth;       // width of a single frame in the spritesheet
@@ -27,6 +27,7 @@ private:
   float frameDuration;  // how long each frame lasts
   float animationTimer; // timer to control frame switching
   int totalFrames;      // total number of frames
-};
+  int ceilingLimit;
 
-#endif
+  void updateAnimation(float deltaTime);
+};
