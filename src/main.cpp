@@ -1,10 +1,13 @@
+#include "Background.h"
 #include "Player.h"
 #include <SFML/Graphics.hpp>
 
 using namespace sf;
 int main() {
   RenderWindow window(VideoMode(800, 600), "Jetpack Joyride Clone");
+
   Player player;
+  Background background(200.0f, "static/background.jpg");
 
   Clock clock;
 
@@ -21,8 +24,12 @@ int main() {
     player.handleInput();
     player.update(deltaTime, window);
 
+    // update background
+    background.update(deltaTime);
+
     // render game
     window.clear();
+    background.draw(window);
     player.draw(window);
     window.display();
   }
